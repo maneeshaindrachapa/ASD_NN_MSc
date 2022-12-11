@@ -4,12 +4,10 @@ import pandas as pd
 import pywt
 from scipy.integrate import simps
 
-from info import participants, epochs, NUM_BANDS, SLICE_SHAPE, SLICE_WINDOW, SLICE_STEP, SRC_FREQ, TARGET_FREQ, DT, TARGET_BANDS
-
+from info import participants, epochs, NUM_BANDS, SLICE_SHAPE, SLICE_WINDOW, SLICE_STEP, SRC_FREQ, TARGET_FREQ, SAMPLING_PERIOD, TARGET_BANDS
 
 def scale(_x: np.array):
     return (_x - _x.min()) / (_x.max() - _x.min())
-
 
 if __name__ == '__main__':
     print('Loading Data')
@@ -20,10 +18,12 @@ if __name__ == '__main__':
     bc_col = 'ASD' #Diagnosis
     cc_col = 'EEG' #Severity
     r_col = 'ADOS2'
+    print(labels)
     print('OK')
+
     BANDS = np.arange(NUM_BANDS) + 1  # frequencies (1 Hz - 50 Hz)
     CREATE_FULL_DATASET = False
-    CREATE_BANDS_DATASET = True
+    CREATE_BANDS_DATASET = False
 
     # define dict to store output
     dataset = {}
@@ -46,12 +46,12 @@ if __name__ == '__main__':
             p_data = np.zeros((0, *SLICE_SHAPE))  # type: np.ndarray
             for j, e in enumerate(epochs[1:]):
                 print(f'{e} ', flush=True, end='')
-                de = dp.loc[e].set_index('T').to_numpy()  # type: np.ndarray # shape: (timestep, channel)
+                de = dp.loc[e].set_index('T').to_numpy()  # type: np.ndarray # shape:(timestep, channel)
                 # powers of each channel
                 ch_p = []
                 for ch in de.T:
                     # find wavelet transform coefficients of channel signal
-                    c, _ = pywt.cwt(data=ch, scales=scales, wavelet=wavelet, sampling_period=DT)  # type: np.ndarray
+                    c, _ = pywt.cwt(data=ch, scales=scales, wavelet=wavelet, sampling_period=SAMPLING_PERIOD)  # type: np.ndarray
                     # calculate abs square of c to obtain wavelet power spectrum
                     ps = np.abs(c) ** 2  # type: np.ndarray
                     # truncate p to avoid partial slices

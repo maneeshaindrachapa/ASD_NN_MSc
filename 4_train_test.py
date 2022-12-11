@@ -11,28 +11,11 @@ from sklearn.metrics import classification_report, r2_score, mean_absolute_error
 
 import models
 from info import participants, EEG_SHAPE, IRT_SHAPE
-
+from caps.capsnet.losses import margin_loss
 tf.random.set_seed(42)
 np.random.seed(42)
 INFO = 'Expected Arguments: [OPTIONAL] [ train | test | info ] [ MODEL_NAME ]'
 FRACTION = 0.7
-
-def margin_loss(_y_true, _y_pred, _m_p=0.9, _m_n=0.1, _lambda=0.5):
-  """
-  Loss Function
-  :param _y_true: shape: (None, num_caps)
-  :param _y_pred: shape: (None, num_caps)
-  :param _m_p: threshold for positive
-  :param _m_n: threshold for negative
-  :param _lambda: loss weight for negative
-  :return: margin loss. shape: (None, )
-  """
-  p_err = tf.maximum(0., _m_p - _y_pred)  # shape: (None, num_caps)
-  n_err = tf.maximum(0., _y_pred - _m_n)  # shape: (None, num_caps)
-  p_loss = _y_true * tf.square(p_err)  # shape: (None, num_caps)
-  n_loss = (1.0 - _y_true) * tf.square(n_err)  # shape: (None, num_caps)
-  loss = tf.reduce_mean(p_loss + _lambda * n_loss, axis=-1)  # shape: (None, )
-  return loss
 
 if __name__ == '__main__':
     # parse command line arguments
@@ -51,9 +34,9 @@ if __name__ == '__main__':
     print('OK')
 
     # load IRT dataset
-    irt_dataset = pd.read_csv('data_1/thermal_data.csv', dtype={'ID': object}).set_index('ID')
+    irt_dataset = pd.read_csv('data_1/thermal_data_1.csv', dtype={'ID': object}).set_index('ID')
 
-    # train-test-split on participant ID
+# train-test-split on participant ID
     print('performing train-test split...', end=' ', flush=True)
     num_train = int(len(participants) * FRACTION)
     p_train = set(np.random.choice(participants, num_train, replace=False))
@@ -97,23 +80,29 @@ if __name__ == '__main__':
     losses_dict = {
         'conv': regular_loss,
         'lstm': regular_loss,
+        'caps': capsule_loss,
         'mlp': regular_loss,
         'conv-mlp': regular_loss,
         'lstm-mlp': regular_loss,
+        'caps-mlp': capsule_loss,
     }
     shapes_dict = {
         'conv': [EEG_SHAPE],
         'lstm': [EEG_SHAPE],
+        'caps': [EEG_SHAPE],
         'mlp': [IRT_SHAPE],
         'conv-mlp': [EEG_SHAPE, IRT_SHAPE],
         'lstm-mlp': [EEG_SHAPE, IRT_SHAPE],
+        'caps-mlp': [EEG_SHAPE, IRT_SHAPE],
     }
     models_dict = {
         'conv': models.CONV,
         'lstm': models.LSTM,
+        'caps': models.CAPS,
         'mlp': models.MLP,
         'conv-mlp': models.CONV_MLP,
         'lstm-mlp': models.LSTM_MLP,
+        'caps-mlp': models.CAPS_MLP,
     }
     # model-specific input data
     D_TRAIN: List = ...
@@ -152,7 +141,9 @@ if __name__ == '__main__':
         model.fit(D_TRAIN[0], D_TRAIN[1], batch_size=32, epochs=500, validation_data=(D_TEST[0], D_TEST[1]), callbacks=[save_best], verbose=2)
     if testing:
         model.load_weights(save_path)
-        [label, score] = model.predict(D_TEST[0], batch_size=32, verbose=2) # do prediction
+        [label, score] = model.predict(D_TEST[0], batch_size=32, verbose=2)
+        print("=======predict=====")
+        print(np.argmax(label, axis=1))
         y_pred = np.argmax(label, axis=1)
         y_true = np.argmax(D_TEST[1][0], axis=1)
         print("Classification Task")

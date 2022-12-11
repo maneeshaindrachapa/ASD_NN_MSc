@@ -3,6 +3,8 @@ from typing import Tuple
 
 import tensorflow as tf
 from tensorflow.keras import layers as kl, models as km
+from caps.capsnet.layers import ConvCaps2D, DenseCaps
+from caps.capsnet.nn import squash, norm, mask_cid
 
 DROPOUT = 0.4
 REG = 'l1_l2'
@@ -100,6 +102,40 @@ def _LSTM(timesteps, ch_rows, ch_cols, bands):
 
     return call
 
+
+def _CAPS(timesteps, ch_rows, ch_cols, bands):
+    def call(il):
+        ml = kl.Reshape(target_shape=(timesteps, ch_rows * ch_cols, bands))(il)
+        # == define variables ==
+        _f = 8  # filters per convolution
+        _l = 4  # convolutions per block
+        _n = 2  # dense + transition blocks
+        _d0 = 4  # start capsule dimensions
+        _s = (2, 1)  # conv capsule stride
+        _d1 = 8  # final capsule dimensions
+        _r = 3  # dynamic routing iterations
+        _k = (4, 1)  # size of convolution kernel
+        # == intermediate layer(s) ==
+        # initial convolution
+        ml = kl.Conv2D(filters=_f, kernel_size=_k)(ml)
+        ml = kl.BatchNormalization()(ml)
+        ml = kl.ReLU()(ml)
+        # stack dense blocks and transition blocks
+        for i in range(_n):
+            ml = DenseBlock(conv=_l, filters=_f, kernel_size=_k)(ml)
+            ml = TransitionBlock(filters=ml.shape[-1])(ml)
+        # convert to capsule domain
+        print()
+        ml = ConvCaps2D(filters=_f, filter_dims=_d0, kernel_size=_k, strides=_s)(ml)
+        ml = kl.Lambda(squash)(ml)
+        # dense capsule layer with dynamic routing
+        ml = DenseCaps(caps=2, caps_dims=_d1, routing_iter=_r)(ml)
+        ml = kl.Lambda(squash)(ml)
+        return ml
+
+    return call
+
+
 def _MLP(features):
     def call(il):
         # == intermediate layer(s) ==
@@ -143,6 +179,26 @@ def LSTM(eeg_shape: Tuple):
     score = kl.Dense(1, kernel_regularizer=REG, name='s')(ml)
     # == create and return model ==
     return km.Model(inputs=il, outputs=[label, score], name='LSTM')
+
+
+def CAPS(eeg_shape: Tuple):
+    """
+    Generate Capsule Model for EEG data
+    :param eeg_shape: Shape of EEG input
+    :return: CAPS model
+    """
+    # == input layer(s) ==
+    il = kl.Input(shape=eeg_shape)
+    # == model layer(s) ==
+    ml = _CAPS(*eeg_shape)(il)
+    # select capsule with highest activity
+    cl = kl.Lambda(mask_cid)(ml)
+    # == output layer(s) ==
+    label = kl.Lambda(norm, name='l')(ml)
+    score = kl.Dense(1, name='s')(cl)
+    # == create and return model ==
+    return km.Model(inputs=il, outputs=[label, score], name='CAPS')
+
 
 def MLP(irt_shape: Tuple):
     """
@@ -201,3 +257,32 @@ def LSTM_MLP(eeg_shape: Tuple, irt_shape: Tuple):
     score = kl.Dense(1, kernel_regularizer=REG, name='s')(ml)
     # == create and return model ==
     return km.Model(inputs=[il_eeg, il_irt], outputs=[label, score], name='LSTM-MLP')
+
+
+def CAPS_MLP(eeg_shape: Tuple, irt_shape: Tuple):
+    """
+    Generate Capsule + MLP model for EEG and IRT data
+    :param eeg_shape: Shape of EEG input
+    :param irt_shape: Shape of IRT input
+    :return: CONV-MLP model
+    """
+    # == input layer(s) ==
+    il_eeg = kl.Input(shape=eeg_shape)
+    il_irt = kl.Input(shape=irt_shape)
+    # == model layer(s) ==
+    ml_eeg = _CAPS(*eeg_shape)(il_eeg)
+    ml_irt = _MLP(*irt_shape)(il_irt)
+    # convert IRT data to capsule domain, with same shape as ml_eeg
+    ml_irt = kl.Dense(tf.reduce_prod(ml_eeg.shape[1:]))(ml_irt)
+    ml_irt = kl.Reshape(ml_eeg.shape[1:])(ml_irt)
+    ml_irt = kl.Lambda(squash)(ml_irt)
+    # vector addition of ml_eeg and ml_irt
+    ml = kl.Add()([ml_eeg, ml_irt])
+    ml = kl.Lambda(squash)(ml)
+    # select capsule with highest activity
+    cl = kl.Lambda(mask_cid)(ml)
+    # == output layer(s) ==
+    label = kl.Lambda(norm, name='l')(ml)
+    score = kl.Dense(1, name='s')(cl)
+    # == create and return model ==
+    return km.Model(inputs=[il_eeg, il_irt], outputs=[label, score], name='CAPS-MLP')

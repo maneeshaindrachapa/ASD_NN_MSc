@@ -34,7 +34,7 @@ target_cols = [
     'P9', 'P7', 'P5', 'P3', 'P1', 'P2', 'P4', 'P6', 'P8', 'P10'
 ]
 
-# List of target columns with least interpolation (but distorts spatial relationship)
+# List of target columns with minimum interpolation (but distorts spatial relationship)
 minimal_target_cols = [
     'F9', 'F7', 'F3', 'F4', 'F8', 'F10',
     'FT7', 'FC5', 'FC1', 'FC2', 'FC6', 'FT8',
@@ -54,20 +54,22 @@ minimal_target_cols = [
 # =============================
 
 # define constant values
-NUM_CH_ROWS = 5  # EEG channel rows
-NUM_CH_COLS = 10  # EEG channel columns
+NUM_CH_ROWS = 5     # EEG channel rows
+NUM_CH_COLS = 10    # EEG channel columns
 SRC_FREQ = sampling_freq  # sampling frequency
-TARGET_FREQ = 1  # 1 Hz
-DT = 1.0 / SRC_FREQ  # sampling period
+TARGET_FREQ = 1     # 1 Hz
+SAMPLING_PERIOD = 1.0 / SRC_FREQ # sampling period
 
 # define parameters to extract temporal slices
-NUM_BANDS = 50  # number of frequency bands in final result
-SLICE_WINDOW = 30  # secs per slice
-SLICE_STEP = 15  # secs to step to get next slice
-SLICE_SHAPE = (SLICE_WINDOW * TARGET_FREQ, NUM_CH_ROWS, NUM_CH_COLS, NUM_BANDS)
+NUM_BANDS = 50      # number of frequency bands in final result
+SLICE_WINDOW = 30   # secs per slice
+SLICE_STEP = 15     # secs to step to get next slice
+SLICE_SHAPE = (SLICE_WINDOW * TARGET_FREQ, NUM_CH_ROWS, NUM_CH_COLS, NUM_BANDS) # 30,5,10,50
 
+# Delta-1,4, Theta-4,8, Alpha-8,12, Beta-12,32, Gamma-32-40
 TARGET_BANDS = [(1, 4), (4, 8), (8, 12), (12, 32), (32, 40)]
 TARGET_BANDWIDTHS = [hi - lo + 1 for lo, hi in TARGET_BANDS]
 
+# EEG generated dataset shape
 EEG_SHAPE = (*SLICE_SHAPE[:-1], 5)
 IRT_SHAPE = (80,)
