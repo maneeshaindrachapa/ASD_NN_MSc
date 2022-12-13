@@ -3,6 +3,8 @@ from typing import Tuple
 
 import tensorflow as tf
 from tensorflow.keras import layers as kl, models as km
+from tensorflow.keras.layers import Bidirectional, RepeatVector, TimeDistributed, GRU
+
 from caps.capsnet.layers import ConvCaps2D, DenseCaps
 from caps.capsnet.nn import squash, norm, mask_cid
 
@@ -103,6 +105,26 @@ def _LSTM(timesteps, ch_rows, ch_cols, bands):
     return call
 
 
+def _GRU(timesteps, ch_rows, ch_cols, bands):
+    def call(il):
+        ml = kl.Reshape((timesteps, ch_rows * ch_cols * bands))(il)
+        B = 32
+        N = 4
+        seq = []
+        for i in range(N):
+            ml = kl.Bidirectional(
+                kl.GRU(B, activation='tanh', recurrent_activation='sigmoid', stateful=False, return_sequences=True,
+                       dropout=DROPOUT))(ml)
+            seq.append(ml)
+            if i > 0: ml = kl.Concatenate()([*seq])
+        # convolution-GRU layer 3
+        ml = kl.GRU(B, dropout=DROPOUT)(ml)
+        ml = kl.Dense(B, activation='relu')(ml)
+        return ml
+
+    return call
+
+
 def _CAPS(timesteps, ch_rows, ch_cols, bands):
     def call(il):
         ml = kl.Reshape(target_shape=(timesteps, ch_rows * ch_cols, bands))(il)
@@ -191,7 +213,7 @@ def CAPS(eeg_shape: Tuple):
     il = kl.Input(shape=eeg_shape)
     # == model layer(s) ==
     ml = _CAPS(*eeg_shape)(il)
-    # select capsule with highest activity
+    # select capsule with the highest activity
     cl = kl.Lambda(mask_cid)(ml)
     # == output layer(s) ==
     label = kl.Lambda(norm, name='l')(ml)
@@ -212,7 +234,7 @@ def MLP(irt_shape: Tuple):
     ml = _MLP(*irt_shape)(il)
     # == output layer(s) ==
     label = kl.Dense(2, activation='softmax', kernel_regularizer=REG, name='l')(ml)
-    score = kl.Dense(1, kernel_regularizer=REG, name='s')(ml)
+    score = kl.TimeDistributed(kl.Dense(1, activation='linear', kernel_regularizer=REG, name='s'))(ml)
     # == create and return model ==
     return km.Model(inputs=il, outputs=[label, score], name='MLP')
 
@@ -286,3 +308,20 @@ def CAPS_MLP(eeg_shape: Tuple, irt_shape: Tuple):
     score = kl.Dense(1, name='s')(cl)
     # == create and return model ==
     return km.Model(inputs=[il_eeg, il_irt], outputs=[label, score], name='CAPS-MLP')
+
+
+def GRU_(eeg_shape: Tuple):
+    """
+        Generate GRU for EEG Data
+        :param eeg_shape:
+        :return: GRU model
+        """
+    # == input layer(s) ==
+    il = kl.Input(shape=eeg_shape)
+    # == model layer(s) ==
+    ml = _GRU(*eeg_shape)(il)
+    # == output layer(s) ==
+    label = kl.Dense(2, activation='softmax', kernel_regularizer=REG, name='l')(ml)
+    score = kl.Dense(1, kernel_regularizer=REG, name='s')(ml)
+    # == create and return model ==
+    return km.Model(inputs=il, outputs=[label, score], name='GRU')
