@@ -7,6 +7,7 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from matplotlib.collections import LineCollection
 
+import info
 from info import source_cols, target_cols, sampling_freq, measurement_unit, minimal_target_cols
 
 FILTER_DATA = True  # To pass data in bandpass filter
@@ -21,7 +22,7 @@ def preprocessData():
     # if any new columns need to be created, create them beforehand
     print('Creating new columns...', sep=' ', flush=True)
     new_cols = set(target_cols).difference(source_cols)
-
+    # Replace newly created column values with NaN
     for col in new_cols:
         df[col] = np.nan
     print('OK')
@@ -75,8 +76,13 @@ def vizualizeElectrogramEEG(file_name: str, df: pd.DataFrame):
     _cols = df.columns.to_list()  # type: list
     _info = mne.create_info(ch_names=_cols, sfreq=sampling_freq, ch_types='eeg')  # type: dict
     data = mne.io.RawArray(data=df.to_numpy().transpose() * measurement_unit, info=_info)
-
-    fig = data.plot(start=20, duration=5)
+    data.set_montage('standard_1020')
+    print(data.info)
+    ica = mne.preprocessing.ICA(n_components=len(info.target_cols), random_state=97, max_iter=800)
+    ica.fit(data)
+    fig1 = ica.plot_properties(data, picks=[1])
+    fig1.savefig(file_name + "12", bbox_inches='tight')
+    fig = data.plot(start=20, duration=5, n_channels=len(info.target_cols))
     fig.savefig(file_name, bbox_inches='tight')
 
 

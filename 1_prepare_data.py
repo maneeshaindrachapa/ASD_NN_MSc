@@ -25,5 +25,6 @@ def readEEGData():
     dest_filename = 'data_1/data-original.ftr'
     df.to_feather(dest_filename)
 
+
 if __name__ == '__main__':
     readEEGData()

@@ -59,7 +59,7 @@ def ConfusionMatrix(y_true, y_pred):
     group_percentages = ["{0:.2%}".format(value) for value in cf_matrix.flatten() / np.sum(cf_matrix)]
     labels = [f"{v1}\n{v2}\n{v3}" for v1, v2, v3 in zip(group_names, group_counts, group_percentages)]
     labels = np.asarray(labels).reshape(2, 2)
-    sns.heatmap(cf_matrix, annot=labels, fmt='', cmap = 'Blues')
+    sns.heatmap(cf_matrix, annot=labels, fmt='', cmap='Blues')
     plt.savefig(f'figures/confusion-matrix-{model_name}.png', bbox_inches='tight')
 
 
@@ -69,7 +69,8 @@ if __name__ == '__main__':
     mode = sys.argv[1].strip().lower()
     model_name = sys.argv[2].strip().lower()
     assert mode in ['train', 'test', 'info'], INFO
-    assert model_name in ['conv', 'lstm', 'caps', 'mlp', 'gru', 'conv-mlp', 'lstm-mlp', 'caps-mlp'], INFO
+    assert model_name in ['conv', 'convlstm', 'bilstm', 'lstm', 'caps', 'mlp', 'gru', 'conv-mlp', 'lstm-mlp',
+                          'caps-mlp'], INFO
     training = mode == 'train'
     testing = mode == 'test'
     info = mode == 'info'
@@ -126,6 +127,8 @@ if __name__ == '__main__':
     losses_dict = {
         'conv': regular_loss,
         'lstm': regular_loss,
+        'bilstm': regular_loss,
+        'convlstm': regular_loss,
         'caps': capsule_loss,
         'gru': regular_loss,
         'mlp': regular_loss,
@@ -136,6 +139,8 @@ if __name__ == '__main__':
     shapes_dict = {
         'conv': [EEG_SHAPE],
         'lstm': [EEG_SHAPE],
+        'bilstm': [EEG_SHAPE],
+        'convlstm': [EEG_SHAPE],
         'caps': [EEG_SHAPE],
         'gru': [EEG_SHAPE],
         'mlp': [IRT_SHAPE],
@@ -146,6 +151,8 @@ if __name__ == '__main__':
     models_dict = {
         'conv': models.CONV,
         'lstm': models.LSTM,
+        'bilstm': models.BILSTM,
+        'convlstm': models.ConvLSTM,
         'caps': models.CAPS,
         'gru': models.GRU_,
         'mlp': models.MLP,
@@ -156,7 +163,7 @@ if __name__ == '__main__':
     # model-specific input data
     D_TRAIN: List = ...
     D_TEST: List = ...
-    if model_name in ['conv', 'lstm', 'caps', 'gru']:
+    if model_name in ['conv', 'convlstm', 'bilstm', 'lstm', 'caps', 'gru']:
         D_TRAIN = [[X_TRAIN], [Y_TRAIN, Z_TRAIN]]
         D_TEST = [[X_TEST], [Y_TEST, Z_TEST]]
     elif model_name in ['mlp']:

@@ -3,8 +3,6 @@ from typing import Tuple
 
 import tensorflow as tf
 from tensorflow.keras import layers as kl, models as km
-from tensorflow.keras.layers import Bidirectional, RepeatVector, TimeDistributed, GRU
-
 from caps.capsnet.layers import ConvCaps2D, DenseCaps
 from caps.capsnet.nn import squash, norm, mask_cid
 
@@ -100,6 +98,52 @@ def _LSTM(timesteps, ch_rows, ch_cols, bands):
         # convolution-lstm layer 3
         ml = kl.LSTM(B, dropout=DROPOUT)(ml)
         ml = kl.Dense(B, activation='relu')(ml)
+        return ml
+
+    return call
+
+
+def _BILSTM(timesteps, ch_rows, ch_cols, bands):
+    def call(il):
+        ml = kl.Reshape((timesteps, ch_rows * ch_cols * bands))(il)
+        # == intermediate layer(s) ==
+        B = 32
+        N = 4
+        seq = []
+        # stack LSTM blocks
+        for i in range(N):
+            ml = kl.Bidirectional(kl.LSTM(B, return_sequences=True, dropout=DROPOUT))(ml)
+            seq.append(ml)
+            if i > 0: ml = kl.Concatenate()([*seq])
+        # convolution-lstm layer 3
+        ml = kl.LSTM(B, dropout=DROPOUT)(ml)
+        ml = kl.Dense(B, activation='relu')(ml)
+        return ml
+
+    return call
+
+
+def _ConvLSTM(timesteps, ch_rows, ch_cols, bands):
+    def call(il):
+        ml = kl.Reshape((timesteps, ch_rows, ch_cols, bands))(il)
+        _f = 16  # filters per convolution
+        _l = 4  # convolutions per block
+        _n = 4  # dense + transition blocks
+        _k = (4, 1)  # size of convolution kernel
+        # == intermediate layer(s) ==
+        # initial convolution
+        ml = kl.ConvLSTM2D(filters=_f, kernel_size=_k,
+                           activation='tanh', recurrent_activation='hard_sigmoid', padding='same',
+                           return_sequences=True)(ml)
+
+        ml = kl.BatchNormalization()(ml)
+        ml = kl.AveragePooling3D(pool_size=(1, 3, 3), padding='same',
+                                 data_format='channels_first')(ml)
+        ml = kl.ConvLSTM2D(filters=_f, kernel_size=_k, padding='same', return_sequences=True)(ml)
+        ml = kl.BatchNormalization()(ml)
+
+        ml = kl.Dropout(DROPOUT)(ml)
+        ml = kl.Flatten()(ml)
         return ml
 
     return call
@@ -201,6 +245,40 @@ def LSTM(eeg_shape: Tuple):
     score = kl.Dense(1, kernel_regularizer=REG, name='s')(ml)
     # == create and return model ==
     return km.Model(inputs=il, outputs=[label, score], name='LSTM')
+
+
+def BILSTM(eeg_shape: Tuple):
+    """
+    Generate Bi-LSTM Model for EEG data
+    :param eeg_shape: Shape of EEG input
+    :return: Bi-LSTM model
+    """
+    # == input layer(s) ==
+    il = kl.Input(shape=eeg_shape)
+    # == model layer(s) ==
+    ml = _BILSTM(*eeg_shape)(il)
+    # == output layer(s) ==
+    label = kl.Dense(2, activation='softmax', kernel_regularizer=REG, name='l')(ml)
+    score = kl.Dense(1, kernel_regularizer=REG, name='s')(ml)
+    # == create and return model ==
+    return km.Model(inputs=il, outputs=[label, score], name='BILSTM')
+
+
+def ConvLSTM(eeg_shape: Tuple):
+    """
+    Generate Conv-LSTM Model for EEG data
+    :param eeg_shape: Shape of EEG input
+    :return: Conv-LSTM model
+    """
+    # == input layer(s) ==
+    il = kl.Input(shape=eeg_shape)
+    # == model layer(s) ==
+    ml = _ConvLSTM(*eeg_shape)(il)
+    # == output layer(s) ==
+    label = kl.Dense(2, activation='softmax', kernel_regularizer=REG, name='l')(ml)
+    score = kl.Dense(1, kernel_regularizer=REG, name='s')(ml)
+    # == create and return model ==
+    return km.Model(inputs=il, outputs=[label, score], name='CONVLSTM')
 
 
 def CAPS(eeg_shape: Tuple):
