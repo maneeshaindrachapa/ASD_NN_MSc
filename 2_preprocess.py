@@ -2,13 +2,9 @@
 import mne
 import numpy as np
 import pandas as pd
-from matplotlib import pyplot as plt
-from matplotlib.axes import Axes
-from matplotlib.figure import Figure
-from matplotlib.collections import LineCollection
 
 import info
-from info import source_cols, target_cols, sampling_freq, measurement_unit, minimal_target_cols
+from info import source_cols, target_cols, sampling_freq, measurement_unit
 
 FILTER_DATA = True  # To pass data in bandpass filter
 
@@ -59,7 +55,6 @@ def preprocessData():
         _out = _out.set_index(['Participant', 'Epoch', 'T'])[target_cols]
         df_out = df_out.append(_out)
     if FILTER_DATA:
-        vizualizeFliteredEEG(df_out)
         vizualizeElectrogramEEG("figures/filtered-eeg", df_out)
     else:
         vizualizeElectrogramEEG("figures/on-filtered-eeg", df_out)
@@ -77,21 +72,16 @@ def vizualizeElectrogramEEG(file_name: str, df: pd.DataFrame):
     _info = mne.create_info(ch_names=_cols, sfreq=sampling_freq, ch_types='eeg')  # type: dict
     data = mne.io.RawArray(data=df.to_numpy().transpose() * measurement_unit, info=_info)
     data.set_montage('standard_1020')
-    print(data.info)
     ica = mne.preprocessing.ICA(n_components=len(info.target_cols), random_state=97, max_iter=800)
     ica.fit(data)
-    fig1 = ica.plot_properties(data, picks=[1])
-    fig1.savefig(file_name + "12", bbox_inches='tight')
+    fig1 = ica.plot_components()
+
+    for idx, fig_ in enumerate(fig1):
+        fname = '{}'.format(idx)
+        fig_.savefig(file_name + "ICA" + fname, bbox_inches='tight')
+
     fig = data.plot(start=20, duration=5, n_channels=len(info.target_cols))
     fig.savefig(file_name, bbox_inches='tight')
-
-
-def vizualizeFliteredEEG(df: pd.DataFrame):
-    # define (all) columns
-    _cols = df.columns.to_list()
-    _info = mne.create_info(ch_names=_cols, sfreq=sampling_freq, ch_types='eeg')
-    data = mne.io.RawArray(data=df.to_numpy().transpose() * measurement_unit, info=_info)
-    fig = data.plot_psd(fmax=10);
 
 
 if __name__ == '__main__':

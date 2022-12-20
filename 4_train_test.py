@@ -4,18 +4,16 @@ from typing import List
 
 import numpy as np
 import pandas as pd
+import seaborn as sns
 import tensorflow as tf
-from tensorflow import keras as k
+from matplotlib import pyplot as plt
 from sklearn.metrics import classification_report, r2_score, mean_absolute_error, explained_variance_score, \
     confusion_matrix
-from matplotlib import pyplot as plt
-from matplotlib.axes import Axes
-from matplotlib.figure import Figure
-import seaborn as sns
+from tensorflow import keras as k
 
 import models
-from info import participants, EEG_SHAPE, IRT_SHAPE
 from caps.capsnet.losses import margin_loss
+from info import participants, EEG_SHAPE, IRT_SHAPE
 
 tf.random.set_seed(42)
 np.random.seed(42)

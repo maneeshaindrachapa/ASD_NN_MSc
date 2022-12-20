@@ -1,13 +1,15 @@
-
 import numpy as np
 import pandas as pd
 import pywt
 from scipy.integrate import simps
 
-from info import participants, epochs, NUM_BANDS, SLICE_SHAPE, SLICE_WINDOW, SLICE_STEP, SRC_FREQ, TARGET_FREQ, SAMPLING_PERIOD, TARGET_BANDS
+from info import participants, epochs, NUM_BANDS, SLICE_SHAPE, SLICE_WINDOW, SLICE_STEP, SRC_FREQ, TARGET_FREQ, \
+    SAMPLING_PERIOD, TARGET_BANDS
+
 
 def scale(_x: np.array):
     return (_x - _x.min()) / (_x.max() - _x.min())
+
 
 if __name__ == '__main__':
     print('Loading Data')
@@ -15,8 +17,8 @@ if __name__ == '__main__':
     print('OK')
     print('Loading Labels')
     labels = pd.read_csv('data_1/SUBJECTS.csv', dtype={'ID': object}).set_index('ID')
-    bc_col = 'ASD' #Diagnosis
-    cc_col = 'EEG' #Severity
+    bc_col = 'ASD'  # Diagnosis
+    cc_col = 'EEG'  # Severity
     r_col = 'ADOS2'
     print(labels)
     print('OK')
@@ -51,7 +53,8 @@ if __name__ == '__main__':
                 ch_p = []
                 for ch in de.T:
                     # find wavelet transform coefficients of channel signal
-                    c, _ = pywt.cwt(data=ch, scales=scales, wavelet=wavelet, sampling_period=SAMPLING_PERIOD)  # type: np.ndarray
+                    c, _ = pywt.cwt(data=ch, scales=scales, wavelet=wavelet,
+                                    sampling_period=SAMPLING_PERIOD)  # type: np.ndarray
                     # calculate abs square of c to obtain wavelet power spectrum
                     ps = np.abs(c) ** 2  # type: np.ndarray
                     # truncate p to avoid partial slices
@@ -102,12 +105,13 @@ if __name__ == '__main__':
             # power spectrum
             _ps = dataset[key]
             # band power (N x 30 x 5 x 10 x 5)
-            _band_power = np.stack([simps(_ps[..., lo - 1:hi], axis=-1) for lo, hi in TARGET_BANDS], axis=-1)  # type: np.ndarray
+            _band_power = np.stack([simps(_ps[..., lo - 1:hi], axis=-1) for lo, hi in TARGET_BANDS],
+                                   axis=-1)  # type: np.ndarray
             # differential entropy (DE) (N x 30 x 5 x 10 x 5)
             _de = np.log(_band_power)
             band_dataset[key] = _de
         print('OK')
-        
+
         print('Saving frequency band data')
         np.savez_compressed('data_1/data-processed-bands.npz', **band_dataset)
         print('OK')

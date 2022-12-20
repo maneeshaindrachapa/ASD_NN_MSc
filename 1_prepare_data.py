@@ -1,6 +1,7 @@
 import pandas as pd
 from info import participants, epochs, source_cols
 
+
 def readEEGData():
     # DataFrame to store all recordings
     df = pd.DataFrame(columns=['Participant', 'Epoch', *source_cols])
