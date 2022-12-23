@@ -47,7 +47,7 @@ def preprocessData():
         data.set_montage('standard_1020')
         data.interpolate_bads(reset_bads=True)
         if FILTER_DATA:
-            data = data.filter(l_freq=1, h_freq=35)
+            data = data.filter(l_freq=1, h_freq=50)
         # append to output
         _out = data.to_data_frame().rename(columns={'time': 'T'})  # type: pd.DataFrame
         _out['Participant'] = i[0]
@@ -57,7 +57,7 @@ def preprocessData():
     if FILTER_DATA:
         vizualizeElectrogramEEG("figures/filtered-eeg", df_out)
     else:
-        vizualizeElectrogramEEG("figures/on-filtered-eeg", df_out)
+        vizualizeElectrogramEEG("figures/un-filtered-eeg", df_out)
 
     print(df_out.head)
     print(len(df_out.index))
@@ -74,11 +74,17 @@ def vizualizeElectrogramEEG(file_name: str, df: pd.DataFrame):
     data.set_montage('standard_1020')
     ica = mne.preprocessing.ICA(n_components=len(info.target_cols), random_state=97, max_iter=800)
     ica.fit(data)
+    ica.plot_sources(data, show_scrollbars=False)
     fig1 = ica.plot_components()
 
     for idx, fig_ in enumerate(fig1):
         fname = '{}'.format(idx)
         fig_.savefig(file_name + "ICA" + fname, bbox_inches='tight')
+
+    # plot an overlay of the original signal against the reconstructed signal with the artifactual ICs excluded
+    ica.plot_overlay(data, exclude=[0], picks='eeg')
+    # plot some diagnostics of each IC
+    ica.plot_properties(data, picks=[0])
 
     fig = data.plot(start=20, duration=5, n_channels=len(info.target_cols))
     fig.savefig(file_name, bbox_inches='tight')

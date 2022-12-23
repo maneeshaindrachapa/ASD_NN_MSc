@@ -17,15 +17,15 @@ if __name__ == '__main__':
     print('OK')
     print('Loading Labels')
     labels = pd.read_csv('data_1/SUBJECTS.csv', dtype={'ID': object}).set_index('ID')
-    bc_col = 'ASD'  # Diagnosis
-    cc_col = 'EEG'  # Severity
+    bc_col = 'ASD'
+    cc_col = 'EEG'
     r_col = 'ADOS2'
     print(labels)
     print('OK')
 
-    BANDS = np.arange(NUM_BANDS) + 1  # frequencies (1 Hz - 50 Hz)
-    CREATE_FULL_DATASET = False
-    CREATE_BANDS_DATASET = False
+    BANDS = np.arange(NUM_BANDS) + 1  # frequencies (1 Hz - 50 Hz) range
+    CREATE_FULL_DATASET = False  # create full data set preprocessed data + subjects data
+    CREATE_BANDS_DATASET = False  # create bands dataset using full dataset
 
     # define dict to store output
     dataset = {}

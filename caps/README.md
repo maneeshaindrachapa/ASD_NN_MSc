@@ -1,7 +1,6 @@
 # CapsNet
 
 This repository provides Capsule Layer Implementations according to the original paper. Working in TensorFlow 2.x.
-Configured to be installable as a pip package
 
 ## MNIST Capsule Network
 

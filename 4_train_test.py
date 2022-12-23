@@ -67,8 +67,7 @@ if __name__ == '__main__':
     mode = sys.argv[1].strip().lower()
     model_name = sys.argv[2].strip().lower()
     assert mode in ['train', 'test', 'info'], INFO
-    assert model_name in ['conv', 'convlstm', 'bilstm', 'lstm', 'caps', 'mlp', 'gru', 'conv-mlp', 'lstm-mlp',
-                          'caps-mlp'], INFO
+    assert model_name in ['conv', 'convlstm', 'bilstm', 'lstm', 'caps', 'gru'], INFO
     training = mode == 'train'
     testing = mode == 'test'
     info = mode == 'info'
@@ -77,9 +76,6 @@ if __name__ == '__main__':
     print('loading EEG dataset...', end=' ', flush=True)
     eeg_dataset = np.load('data_1/data-processed-bands.npz')
     print('OK')
-
-    # load IRT dataset
-    irt_dataset = pd.read_csv('data_1/irt_.csv', dtype={'ID': object}).set_index('ID')
 
     # train-test-split on participant ID
     print('performing train-test split...', end=' ', flush=True)
@@ -90,7 +86,6 @@ if __name__ == '__main__':
     # create test and train data
     # features
     X_TRAIN, X_TEST = np.zeros((0, *EEG_SHAPE)), np.zeros((0, *EEG_SHAPE))  # type: np.ndarray # EEG features
-    T_TRAIN, T_TEST = np.zeros((0, *IRT_SHAPE)), np.zeros((0, *IRT_SHAPE))  # type: np.ndarray # IRT features
     # labels
     Y_TRAIN, Y_TEST = np.zeros((0,)), np.zeros((0,))  # type: np.ndarray # prediction label
     Z_TRAIN, Z_TEST = np.zeros((0,)), np.zeros((0,))  # type: np.ndarray # ados-2 score
@@ -98,22 +93,19 @@ if __name__ == '__main__':
         _x = eeg_dataset[f'{p}_x']
         _y = np.full(len(_x), eeg_dataset[f'{p}_bc'])
         _z = np.full(len(_x), eeg_dataset[f'{p}_r'])
-        _t = np.tile(np.squeeze(irt_dataset.loc[p].to_numpy()), (len(_x), 1))
         if p in p_train:
             X_TRAIN = np.append(X_TRAIN, _x, axis=0)
-            T_TRAIN = np.append(T_TRAIN, _t, axis=0)
             Y_TRAIN = np.append(Y_TRAIN, _y, axis=0)
             Z_TRAIN = np.append(Z_TRAIN, _z, axis=0)
         else:
             X_TEST = np.append(X_TEST, _x, axis=0)
-            T_TEST = np.append(T_TEST, _t, axis=0)
             Y_TEST = np.append(Y_TEST, _y, axis=0)
             Z_TEST = np.append(Z_TEST, _z, axis=0)
     # one-hot encode class label
     Y_TRAIN = k.utils.to_categorical(Y_TRAIN, num_classes=2)
     Y_TEST = k.utils.to_categorical(Y_TEST, num_classes=2)
-    print(f'TRAINING: X={X_TRAIN.shape}, T={T_TRAIN.shape}, Y={Y_TRAIN.shape}, Z={Z_TRAIN.shape}')
-    print(f'TESTING: X={X_TEST.shape}, T={T_TEST.shape}, Y={Y_TEST.shape}, Z={Z_TEST.shape}')
+    print(f'TRAINING: X={X_TRAIN.shape}, Y={Y_TRAIN.shape}, Z={Z_TRAIN.shape}')
+    print(f'TESTING: X={X_TEST.shape}, Y={Y_TEST.shape}, Z={Z_TEST.shape}')
     print('OK')
 
     print('Creating Variables...', end=' ', flush=True)
@@ -129,10 +121,6 @@ if __name__ == '__main__':
         'convlstm': regular_loss,
         'caps': capsule_loss,
         'gru': regular_loss,
-        'mlp': regular_loss,
-        'conv-mlp': regular_loss,
-        'lstm-mlp': regular_loss,
-        'caps-mlp': capsule_loss,
     }
     shapes_dict = {
         'conv': [EEG_SHAPE],
@@ -141,10 +129,6 @@ if __name__ == '__main__':
         'convlstm': [EEG_SHAPE],
         'caps': [EEG_SHAPE],
         'gru': [EEG_SHAPE],
-        'mlp': [IRT_SHAPE],
-        'conv-mlp': [EEG_SHAPE, IRT_SHAPE],
-        'lstm-mlp': [EEG_SHAPE, IRT_SHAPE],
-        'caps-mlp': [EEG_SHAPE, IRT_SHAPE],
     }
     models_dict = {
         'conv': models.CONV,
@@ -153,10 +137,6 @@ if __name__ == '__main__':
         'convlstm': models.ConvLSTM,
         'caps': models.CAPS,
         'gru': models.GRU_,
-        'mlp': models.MLP,
-        'conv-mlp': models.CONV_MLP,
-        'lstm-mlp': models.LSTM_MLP,
-        'caps-mlp': models.CAPS_MLP,
     }
     # model-specific input data
     D_TRAIN: List = ...
@@ -164,12 +144,6 @@ if __name__ == '__main__':
     if model_name in ['conv', 'convlstm', 'bilstm', 'lstm', 'caps', 'gru']:
         D_TRAIN = [[X_TRAIN], [Y_TRAIN, Z_TRAIN]]
         D_TEST = [[X_TEST], [Y_TEST, Z_TEST]]
-    elif model_name in ['mlp']:
-        D_TRAIN = [[T_TRAIN], [Y_TRAIN, Z_TRAIN]]
-        D_TEST = [[T_TEST], [Y_TEST, Z_TEST]]
-    elif model_name in ['conv-mlp', 'lstm-mlp', 'caps-mlp']:
-        D_TRAIN = [[X_TRAIN, T_TRAIN], [Y_TRAIN, Z_TRAIN]]
-        D_TEST = [[X_TEST, T_TEST], [Y_TEST, Z_TEST]]
     print('OK')
 
     print('Training and Evaluation')
@@ -202,10 +176,8 @@ if __name__ == '__main__':
         [label, score] = model.predict(D_TEST[0], batch_size=32, verbose=2)
         y_pred = np.argmax(label, axis=1)
         y_true = np.argmax(D_TEST[1][0], axis=1)
-
         # Save confusion matrix
         ConfusionMatrix(y_true, y_pred)
-
         print("Classification Task")
         print(classification_report(y_true, y_pred))
         print("Regression Task")
