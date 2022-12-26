@@ -1,0 +1,62 @@
+<nav class="navbar navbar-expand-lg bg-light justify-content-between" style="padding:10px">
+  <a class="navbar-brand" href="#"><img src="../../../assets/img/logo.png" width="10%"></a>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item active">
+        <a class="nav-link" href="#info">
+          <fa-icon [icon]="faInfoCircle"></fa-icon>Information <span class="sr-only"></span>
+        </a>
+      </li>
+      <li class="nav-item active">
+        <a class="nav-link" href="#try">
+          <fa-icon [icon]="faBrain"></fa-icon>Try <span class="sr-only"></span>
+        </a>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="information" id="info">
+    <h4 class="main-title">What is DeepBrain ?</h4>
+    <p>
+      DeepBrain is a software solution based on neural networks that is capable of detecting the prevelance of Autism Spectrum Disorder using EEG data. This behaviour-independant system is effective than the current diagnosis practice which is based on observering the patient's behaviour.
+    </p>
+    <h4 class="main-title">How to use DeepBrain ?</h4>
+    <p>
+      To use DeepBrain, First need to upload EEG data files as 4 epochs.<br/></p>
+      <ol>
+        <li>BASELINE</li>
+        <li>START</li>
+        <li>MIDDLE</li>
+        <li>END</li>
+      </ol>
+     <p> File names must be <b><i>participantID_epoch.csv</i></b> files. Then press <b>Predict</b> button.
+    </p>
+  </div>
+  <div class="row diagnosis" id="try">
+    <hr>
+    <h4 class="main-title" id="try">Try Diagnosing EEG</h4>
+    <h4 class="prediction" *ngIf="predictionDone">Autism Spectrum Disorder:<span
+        [ngClass]="{'red-text':predictedValue=='Positive', 'green-text':predictedValue=='Negative'}">{{predictedValue}}</span>
+    </h4>
+    <div class="uploadfile col-md-6" style="margin:0px auto">
+      <h4 class="sub-title">Upload EEG data</h4>
+      <app-upload-files></app-upload-files>
+      <h4 class="sub-title appear" style="margin-top:5%">Select Model</h4>
+      <select class="form-select appear" [(ngModel)]="selectedValue" (change)="selectChange($event)" [disabled]="">
+        <option value="0">Convolutional</option>
+        <option value="1">LSTM</option>
+        <option value="2">Bi-LSTM</option>
+        <option value="3">GRU</option>
+        <option value="4">ConvLSTM</option>
+        <option value="5">CapsNet</option>
+      </select>
+      <button class="btn btn-dark" [disabled]="uploadCompleted=='0'" (click)="predict()" style="width:100%"> Predict</button>
+    </div>
+
+  </div>
+</div>
+
+<footer class="bg-light text-center text-lg-start footer">
+</footer>

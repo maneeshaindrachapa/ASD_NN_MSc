@@ -8,13 +8,15 @@ import seaborn as sns
 import tensorflow as tf
 from matplotlib import pyplot as plt
 from sklearn.metrics import classification_report, r2_score, mean_absolute_error, explained_variance_score, \
-    confusion_matrix
+    confusion_matrix,mean_squared_error
 from tensorflow import keras as k
 
 import models
 from caps.capsnet.losses import margin_loss
 from info import participants, EEG_SHAPE, IRT_SHAPE
+import time
 
+start_time = time.time()
 tf.random.set_seed(42)
 np.random.seed(42)
 INFO = 'Expected Arguments: [OPTIONAL] [ train | test | info ] [ MODEL_NAME ]'
@@ -185,5 +187,8 @@ if __name__ == '__main__':
         r_pred = score
         print(f'R^2 = {r2_score(r_true, r_pred)}')
         print(f'MAE = {mean_absolute_error(r_true, r_pred)}')
+        print(f'RMSE = {(mean_squared_error(r_true, r_pred))**0.5}')
         print(f'EVS = {explained_variance_score(r_true, r_pred)}')
+        print("\nModel:"+model_name.upper())
+        print("--- %s seconds ---" % (time.time() - start_time))
     print('Done')
