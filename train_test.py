@@ -13,7 +13,7 @@ from tensorflow import keras as k
 
 import models
 from caps.capsnet.losses import margin_loss
-from info import participants, EEG_SHAPE, IRT_SHAPE
+from info import participants, EEG_SHAPE
 import time
 
 start_time = time.time()
@@ -26,30 +26,34 @@ FRACTION = 0.7
 def saveTrainTestLostFig(history):
     # Get training and test loss histories
     training_loss = history.history['loss']
-    test_loss = history.history['val_loss']
-
+    test_loss = history.history['l_loss']
     # Create count of the number of epochs
     epoch_count = range(1, len(training_loss) + 1)
-
     # Visualize loss history
-    plt.plot(epoch_count, training_loss, 'r--')
-    plt.plot(epoch_count, test_loss, 'b-')
-    plt.legend(['Training Loss', 'Test Loss'])
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-    plt.savefig(f'figures/train-test-lost-epoch-{model_name}.png', bbox_inches='tight')
+    figT= plt 
+    figT.plot(epoch_count, training_loss, 'r--')
+    figT.plot(epoch_count, test_loss, 'b-')
+    figT.legend(['Training Loss', 'Test Loss'])
+    figT.xlabel('Epoch')
+    figT.ylabel('Loss')
+    figT.savefig(f'figures/train-test-lost-epoch-{model_name}.png', bbox_inches='tight')
+    figT.clf()
 
 
 def plot_history(history):
-    """
-    Plot the training history
-    """
-    metrics = 'loss'
-    history_df = pd.DataFrame.from_dict(history.history)
-    sns.lineplot(data=history_df[metrics])
-    plt.xlabel("epochs")
-    plt.ylabel("RMSE")
-    plt.savefig(f'figures/train-history-{model_name}.png', bbox_inches='tight')
+    accuracy = history.history['val_l_acc']
+
+    # Create count of the number of epochs
+    epoch_count = range(1, len(accuracy) + 1)
+
+    # Visualize loss history
+    figA = plt
+    figA.plot(epoch_count, accuracy)
+    figA.legend(['Accuracy'])
+    figA.xlabel('Epoch')
+    figA.ylabel('Accuracy')
+    figA.savefig(f'figures/accuracy-{model_name}.png', bbox_inches='tight')
+    figA.clf()
 
 
 def ConfusionMatrix(y_true, y_pred):
@@ -76,7 +80,7 @@ if __name__ == '__main__':
 
     # load EEG dataset
     print('loading EEG dataset...', end=' ', flush=True)
-    eeg_dataset = np.load('data_1/data-processed-bands.npz')
+    eeg_dataset = np.load('data/data-processed-bands.npz')
     print('OK')
 
     # train-test-split on participant ID
@@ -179,16 +183,11 @@ if __name__ == '__main__':
         y_pred = np.argmax(label, axis=1)
         y_true = np.argmax(D_TEST[1][0], axis=1)
         # Save confusion matrix
+        print("\nModel:"+model_name.upper())
         ConfusionMatrix(y_true, y_pred)
         print("Classification Task")
         print(classification_report(y_true, y_pred))
-        print("Regression Task")
-        r_true = D_TEST[1][1]
-        r_pred = score
-        print(f'R^2 = {r2_score(r_true, r_pred)}')
-        print(f'MAE = {mean_absolute_error(r_true, r_pred)}')
-        print(f'RMSE = {(mean_squared_error(r_true, r_pred))**0.5}')
-        print(f'EVS = {explained_variance_score(r_true, r_pred)}')
+        
         print("\nModel:"+model_name.upper())
         print("--- %s seconds ---" % (time.time() - start_time))
     print('Done')

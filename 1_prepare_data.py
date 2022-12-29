@@ -12,7 +12,7 @@ def readEEGData():
     # rename / reorganize columns and save to file
     for i, participant in enumerate(participants):
         for epoch in epochs:
-            filename = f'data_1/eeg/{participant}/{participant}_{epoch}.csv'
+            filename = f'data/eeg/{participant}/{participant}_{epoch}.csv'
             print(f'\t{filename}...')
             df_ = pd.read_csv(filename)
             df_['Participant'] = participant
@@ -21,9 +21,8 @@ def readEEGData():
         print(f'{i + 1} of {len(participants)} completed')
     print("Read Completed\n")
     print(df.head)
-
     print('Saving Data...')
-    dest_filename = 'data_1/data-original.ftr'
+    dest_filename = 'data/data-original.ftr'
     df.to_feather(dest_filename)
 
 

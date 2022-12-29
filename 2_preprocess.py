@@ -12,7 +12,7 @@ FILTER_DATA = True  # To pass data in bandpass filter
 def preprocessData():
     # read original dataset
     print('Reading dataset...', sep=' ', flush=True)
-    df = pd.read_feather('data_1/data-original.ftr')
+    df = pd.read_feather('data/data-original.ftr')
     print('OK')
 
     # if any new columns need to be created, create them beforehand
@@ -63,7 +63,7 @@ def preprocessData():
     print(len(df_out.index))
     print('OK')
     print('Saving data')
-    df_out.reset_index().to_feather('data_1/data-clean.ftr')
+    df_out.reset_index().to_feather('data/data-clean.ftr')
     print('OK')
 
 

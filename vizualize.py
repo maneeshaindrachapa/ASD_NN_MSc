@@ -13,7 +13,7 @@ band_names = ['delta', 'theta', 'alpha', 'beta', 'gamma']
 
 if __name__ == '__main__':
     T, H, W, R = EEG_SHAPE
-    data = np.load('data_1/data-processed-bands.npz')
+    data = np.load('data/data-processed-bands.npz')
 
     # plot configuration
     step = 5

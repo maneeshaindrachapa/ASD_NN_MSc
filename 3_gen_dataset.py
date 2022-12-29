@@ -13,14 +13,13 @@ def scale(_x: np.array):
 
 if __name__ == '__main__':
     print('Loading Data')
-    data = pd.read_feather('data_1/data-clean.ftr')
+    data = pd.read_feather('data/data-clean.ftr')
     print('OK')
     print('Loading Labels')
-    labels = pd.read_csv('data_1/SUBJECTS.csv', dtype={'ID': object}).set_index('ID')
+    labels = pd.read_csv('data/SUBJECTS.csv', dtype={'ID': object}).set_index('ID')
     bc_col = 'ASD'
     cc_col = 'EEG'
     r_col = 'ADOS2'
-    print(labels)
     print('OK')
 
     BANDS = np.arange(NUM_BANDS) + 1  # frequencies (1 Hz - 50 Hz) range
@@ -35,8 +34,8 @@ if __name__ == '__main__':
     scales = SRC_FREQ / BANDS  # scales corresponding to frequency bands
 
     if CREATE_FULL_DATASET:
-        # generate values for x, y, and z
-        print('Generating X, Y, and Z')
+        # generate values for x, y
+        print('Generating X, Y')
         data = data.set_index('Participant')
         for i, p in enumerate(participants):
             print(f'Participant: {p} - ', flush=True, end='')
@@ -90,13 +89,13 @@ if __name__ == '__main__':
 
         # save dataset
         print('Saving processed data')
-        np.savez_compressed('data_1/data-processed.npz', **dataset)
+        np.savez_compressed('data/data-processed.npz', **dataset)
         print('OK')
 
     if CREATE_BANDS_DATASET:
         # extract delta, theta, alpha, beta, and gamma frequency bands
         print('Reducing to frequency bands')
-        dataset = np.load('data_1/data-processed.npz')
+        dataset = np.load('data/data-processed.npz')
         band_dataset = {}
         for key in dataset.keys():
             if key[-1] != 'x':
@@ -113,5 +112,5 @@ if __name__ == '__main__':
         print('OK')
 
         print('Saving frequency band data')
-        np.savez_compressed('data_1/data-processed-bands.npz', **band_dataset)
+        np.savez_compressed('data/data-processed-bands.npz', **band_dataset)
         print('OK')

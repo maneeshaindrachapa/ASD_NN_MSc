@@ -43,16 +43,6 @@ minimal_target_cols = [
     'P9', 'P7', 'P3', 'P4', 'P8', 'P10'
 ]
 
-# =============================
-# target matrix
-# =============================
-# F9  F7  F3  [Fz]  F4  F8  F10
-# FT7 FC5 FC1 [--]  FC2 FC6 FT8
-# T9  T7  C3  [--]  C4  T8  T10
-# TP7 CP5 CP1 [--]  CP2 CP6 TP8
-# P9  P7  P3  [Pz]  P4  P8  P10
-# =============================
-
 # define constant values
 NUM_CH_ROWS = 5  # EEG channel rows
 NUM_CH_COLS = 10  # EEG channel columns

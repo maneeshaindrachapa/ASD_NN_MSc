@@ -6,7 +6,7 @@ from tensorflow.keras import layers as kl, models as km
 from caps.capsnet.layers import ConvCaps2D, DenseCaps
 from caps.capsnet.nn import squash, norm, mask_cid
 
-DROPOUT = 0.4
+DROPOUT = 0.2
 REG = 'l1_l2'
 CONV_SPEC = {'padding': 'same', 'kernel_regularizer': REG}
 
@@ -127,8 +127,6 @@ def _ConvLSTM(timesteps, ch_rows, ch_cols, bands):
     def call(il):
         ml = kl.Reshape((timesteps, ch_rows, ch_cols, bands))(il)
         _f = 16  # filters per convolution
-        _l = 4  # convolutions per block
-        _n = 4  # dense + transition blocks
         _k = (4, 1)  # size of convolution kernel
         # == intermediate layer(s) ==
         # initial convolution
@@ -186,16 +184,19 @@ def _CAPS(timesteps, ch_rows, ch_cols, bands):
         ml = kl.Conv2D(filters=_f, kernel_size=_k)(ml)
         ml = kl.BatchNormalization()(ml)
         ml = kl.ReLU()(ml)
-        # stack dense blocks and transition blocks
-        for i in range(_n):
-            ml = DenseBlock(conv=_l, filters=_f, kernel_size=_k)(ml)
-            ml = TransitionBlock(filters=ml.shape[-1])(ml)
+        ml = kl.AveragePooling3D(pool_size=(1, 3, 3), padding='same',
+                                 data_format='channels_first')(ml)
+        # # stack dense blocks and transition blocks
+        # for i in range(_n):
+        #     ml = DenseBlock(conv=_l, filters=_f, kernel_size=_k)(ml)
+        #     ml = TransitionBlock(filters=ml.shape[-1])(ml)
         # convert to capsule domain
         ml = ConvCaps2D(filters=_f, filter_dims=_d0, kernel_size=_k, strides=_s)(ml)
         ml = kl.Lambda(squash)(ml)
         # dense capsule layer with dynamic routing
         ml = DenseCaps(caps=2, caps_dims=_d1, routing_iter=_r)(ml)
         ml = kl.Lambda(squash)(ml)
+        ml = kl.Dropout(0.2)(ml)
         return ml
 
     return call
