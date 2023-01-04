@@ -14,6 +14,8 @@ export class HomeComponent implements OnInit {
   predictedValue = 'Positive'
   predictionDone = false;
   uploadCompleted = ""
+  positive =""
+  negative=""
 
   @HostListener('mousemove', ['$event'])
   public onAnything($event): void {
@@ -53,6 +55,8 @@ export class HomeComponent implements OnInit {
       } else {
         this.predictedValue = "Negative";
       }
+      this.positive = ((data['positive']).toString()).substring(0,5);
+      this.negative=((data['negative']).toString()).substring(0,5);
 
       this.predictionDone = true;
     }, (err) => {

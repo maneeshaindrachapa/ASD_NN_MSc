@@ -23,7 +23,7 @@ if __name__ == '__main__':
     print('OK')
 
     BANDS = np.arange(NUM_BANDS) + 1  # frequencies (1 Hz - 50 Hz) range
-    CREATE_FULL_DATASET = False  # create full data set preprocessed data + subjects data
+    CREATE_FULL_DATASET = True  # create full data set preprocessed data + subjects data
     CREATE_BANDS_DATASET = False  # create bands dataset using full dataset
 
     # define dict to store output

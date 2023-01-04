@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 # List of all participants
 participants = [
     '002', '004', '005', '007', '008', '011',
@@ -62,4 +60,3 @@ TARGET_BANDWIDTHS = [hi - lo + 1 for lo, hi in TARGET_BANDS]
 
 # EEG generated dataset shape
 EEG_SHAPE = (*SLICE_SHAPE[:-1], 5)
-IRT_SHAPE = (64,)

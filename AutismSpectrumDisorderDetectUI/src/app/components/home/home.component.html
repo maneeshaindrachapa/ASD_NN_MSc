@@ -20,18 +20,20 @@
   <div class="information" id="info">
     <h4 class="main-title">What is DeepBrain ?</h4>
     <p>
-      DeepBrain is a software solution based on neural networks that is capable of detecting the prevelance of Autism Spectrum Disorder using EEG data. This behaviour-independant system is effective than the current diagnosis practice which is based on observering the patient's behaviour.
+      DeepBrain is a software solution based on neural networks that is capable of detecting the prevelance of Autism
+      Spectrum Disorder using EEG data. This behaviour-independant system is effective than the current diagnosis
+      practice which is based on observering the patient's behaviour.
     </p>
     <h4 class="main-title">How to use DeepBrain ?</h4>
     <p>
-      To use DeepBrain, First need to upload EEG data files as 4 epochs.<br/></p>
-      <ol>
-        <li>BASELINE</li>
-        <li>START</li>
-        <li>MIDDLE</li>
-        <li>END</li>
-      </ol>
-     <p> File names must be <b><i>participantID_epoch.csv</i></b> files. Then press <b>Predict</b> button.
+      To use DeepBrain, First need to upload EEG data files as 4 epochs.<br /></p>
+    <ol>
+      <li>BASELINE</li>
+      <li>START</li>
+      <li>MIDDLE</li>
+      <li>END</li>
+    </ol>
+    <p> File names must be <b><i>participantID_epoch.csv</i></b> files. Then press <b>Predict</b> button.
     </p>
   </div>
   <div class="row diagnosis" id="try">
@@ -39,6 +41,9 @@
     <h4 class="main-title" id="try">Try Diagnosing EEG</h4>
     <h4 class="prediction" *ngIf="predictionDone">Autism Spectrum Disorder:<span
         [ngClass]="{'red-text':predictedValue=='Positive', 'green-text':predictedValue=='Negative'}">{{predictedValue}}</span>
+    </h4>
+    <h4 class="prediction" *ngIf="predictionDone">ASD-Positive:<span [ngClass]="">{{positive}}&nbsp;|&nbsp;</span>
+      ASD-Negative:<span [ngClass]="">{{negative}}</span>
     </h4>
     <div class="uploadfile col-md-6" style="margin:0px auto">
       <h4 class="sub-title">Upload EEG data</h4>
@@ -52,7 +57,8 @@
         <option value="4">ConvLSTM</option>
         <option value="5">CapsNet</option>
       </select>
-      <button class="btn btn-dark" [disabled]="uploadCompleted=='0'" (click)="predict()" style="width:100%"> Predict</button>
+      <button class="btn btn-dark" [disabled]="uploadCompleted=='0'" (click)="predict()" style="width:100%">
+        Predict</button>
     </div>
 
   </div>

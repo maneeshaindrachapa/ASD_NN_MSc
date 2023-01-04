@@ -213,15 +213,23 @@ def _predict(participant_id, model_name):
     model.load_weights(f'weights/{model_name}.hdf5')
 
     [label, score] = model.predict(X_PRED, batch_size=32, verbose=2)
+    print(label)
+    percentage = np.sum(label,axis=0)
+    total = np.sum(percentage)
+    positive = (percentage[1]/total)*100
+    negative = (percentage[0]/total)*100
     label = (np.argmax(label, axis=1))
     count_true = np.count_nonzero(label == 1)
     count_false = np.count_nonzero(label == 0)
     print("--------\nModel:"+model_name.upper())
     print("--- %s seconds ---" % (time.time() - start_time))
+    print(percentage/30)
+    predictions = [negative,positive]
     if count_true > count_false:
-        return 1
+        predictions.append(1)
     else:
-        return 0
+        predictions.append(0)
+    return predictions
 
 
 def predictStart(participant_id, model_name):

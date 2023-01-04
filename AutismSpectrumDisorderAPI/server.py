@@ -76,8 +76,8 @@ def predict_():
     print(model_name)
     print(participant_id)
     diagnosis = predictStart(participant_id, model_name)
-    print(diagnosis)
-    return {"asd":diagnosis}
+    
+    return {"negative":diagnosis[0],"positive":diagnosis[1],"asd":diagnosis[2]}
 
 
 def _get_files():

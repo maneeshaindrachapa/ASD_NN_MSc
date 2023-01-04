@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 from typing import Tuple
 
 import tensorflow as tf
@@ -184,19 +183,16 @@ def _CAPS(timesteps, ch_rows, ch_cols, bands):
         ml = kl.Conv2D(filters=_f, kernel_size=_k)(ml)
         ml = kl.BatchNormalization()(ml)
         ml = kl.ReLU()(ml)
-        ml = kl.AveragePooling3D(pool_size=(1, 3, 3), padding='same',
-                                 data_format='channels_first')(ml)
-        # # stack dense blocks and transition blocks
-        # for i in range(_n):
-        #     ml = DenseBlock(conv=_l, filters=_f, kernel_size=_k)(ml)
-        #     ml = TransitionBlock(filters=ml.shape[-1])(ml)
+        # stack dense blocks and transition blocks
+        for i in range(_n):
+            ml = DenseBlock(conv=_l, filters=_f, kernel_size=_k)(ml)
+            ml = TransitionBlock(filters=ml.shape[-1])(ml)
         # convert to capsule domain
         ml = ConvCaps2D(filters=_f, filter_dims=_d0, kernel_size=_k, strides=_s)(ml)
         ml = kl.Lambda(squash)(ml)
         # dense capsule layer with dynamic routing
         ml = DenseCaps(caps=2, caps_dims=_d1, routing_iter=_r)(ml)
         ml = kl.Lambda(squash)(ml)
-        ml = kl.Dropout(0.2)(ml)
         return ml
 
     return call

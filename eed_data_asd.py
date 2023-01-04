@@ -187,9 +187,9 @@ def genDataSet():
                 # stack each power spectrum
                 ps = np.stack(ch_p, axis=1)  # shape: (timestep, channel, band)
                 # chunk power spectrum into N slices of SLICE_SHAPE
-                W = SLICE_WINDOW * TARGET_FREQ
-                S = SLICE_STEP * TARGET_FREQ
-                N = (len(ps) - W) // S
+                W = SLICE_WINDOW * TARGET_FREQ # window
+                S = SLICE_STEP * TARGET_FREQ # slice
+                N = (len(ps) - W) // S # no of slices
                 ws = [ps[k * S:k * S + W].reshape(SLICE_SHAPE) for k in range(N)]
                 # generate training data samples
                 ds = np.stack(ws, axis=0)  # shape: (sample, timestep, row, col, band)
