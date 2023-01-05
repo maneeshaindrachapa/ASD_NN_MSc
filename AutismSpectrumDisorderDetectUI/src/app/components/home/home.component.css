@@ -17,8 +17,13 @@ fa-icon {
 }
 .prediction{
   margin-top: 5%;
-  margin-bottom: 5%;
   text-align: center;
+}
+.prediction_proba{
+  text-align: center;
+  font-size: 12px;
+  margin-top: 2%;
+  margin-bottom: 5%;
 }
 .btn-dark{
   margin-top: 2%;

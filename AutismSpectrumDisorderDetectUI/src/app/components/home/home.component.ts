@@ -1,6 +1,7 @@
 import { Component, HostListener, OnInit } from '@angular/core';
 import { faBrain, faInfoCircle } from '@fortawesome/free-solid-svg-icons';
 import { UploadFilesService } from 'src/app/services/upload-files.service';
+import { NgxUiLoaderService } from "ngx-ui-loader";
 
 @Component({
   selector: 'app-home',
@@ -21,7 +22,7 @@ export class HomeComponent implements OnInit {
   public onAnything($event): void {
     this.uploadCompleted = localStorage.getItem("completed");
   }
-  constructor(private uploadService: UploadFilesService) {
+  constructor(private uploadService: UploadFilesService,private ngxService: NgxUiLoaderService) {
   }
 
   ngOnInit(): void {
@@ -33,6 +34,7 @@ export class HomeComponent implements OnInit {
   }
 
   predict() {
+    this.ngxService.start();
     this.predictionDone = false;
     let modelName = "conv";
     if (this.selectedValue == 1) {
@@ -59,6 +61,7 @@ export class HomeComponent implements OnInit {
       this.negative=((data['negative']).toString()).substring(0,5);
 
       this.predictionDone = true;
+      this.ngxService.stop();
     }, (err) => {
       console.log(err);
     })

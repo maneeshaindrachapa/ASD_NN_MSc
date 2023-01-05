@@ -9,7 +9,7 @@ from info import source_cols, target_cols, sampling_freq, epochs, NUM_BANDS, SLI
     SAMPLING_PERIOD, TARGET_BANDS
 from tensorflow import keras as k
 from info import EEG_SHAPE
-from caps.capsnet.losses import margin_loss
+from capsnet import margin_loss
 import time
 
 FILTER_DATA = True  # To pass data in bandpass filter

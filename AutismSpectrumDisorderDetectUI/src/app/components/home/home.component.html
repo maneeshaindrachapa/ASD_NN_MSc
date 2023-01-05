@@ -15,7 +15,7 @@
     </ul>
   </div>
 </nav>
-
+<ngx-ui-loader></ngx-ui-loader>
 <div class="container">
   <div class="information" id="info">
     <h4 class="main-title">What is DeepBrain ?</h4>
@@ -42,8 +42,8 @@
     <h4 class="prediction" *ngIf="predictionDone">Autism Spectrum Disorder:<span
         [ngClass]="{'red-text':predictedValue=='Positive', 'green-text':predictedValue=='Negative'}">{{predictedValue}}</span>
     </h4>
-    <h4 class="prediction" *ngIf="predictionDone">ASD-Positive:<span [ngClass]="">{{positive}}&nbsp;|&nbsp;</span>
-      ASD-Negative:<span [ngClass]="">{{negative}}</span>
+    <h4 class="prediction_proba" *ngIf="predictionDone">Positive Probability: <span style="font-weight:800">{{positive}}  | </span>
+      Negative Probability: <span style="font-weight:800">{{negative}}</span>
     </h4>
     <div class="uploadfile col-md-6" style="margin:0px auto">
       <h4 class="sub-title">Upload EEG data</h4>
