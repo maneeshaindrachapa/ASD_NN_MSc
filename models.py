@@ -2,8 +2,7 @@ from typing import Tuple
 
 import tensorflow as tf
 from tensorflow.keras import layers as kl, models as km
-from caps.capsnet.layers import ConvCaps2D, DenseCaps
-from caps.capsnet.nn import squash, norm, mask_cid
+from capsnet import ConvCaps2D, DenseCaps, squash, norm, mask_cid
 
 DROPOUT = 0.2
 REG = 'l1_l2'

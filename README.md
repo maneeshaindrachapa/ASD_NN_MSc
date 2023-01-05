@@ -1,5 +1,18 @@
 # Autism Spectrum Disorder Classification on Electroencephalogram data using Neural Networks
+## File tree
+```commandline
+│   capsnet.py
+│   eed_data_asd.py
+│   hyperparameter_select.py
+│   info.py
+│   models.py
+│   predict.py
+│   README.md
+│   requirements.txt
+│   train_test.py
+│   vizualize.py
 
+```
 ## How to Train Models
 This project is compatible with ***Python 3.7.x*** version and all the libraries which need to run this project is included in ***requirements.txt*** file. To install the libraries please run the below command.<br>
 
@@ -38,7 +51,7 @@ Go inside ***AutismSpectrumDisorderDetectUI*** and run the below command to inst
 
 ```
 npm install
-ng server 
+ng serve
 ```
 ## Run Back-end
 Go insiide ***AutismSpectrumDisorderAPI*** and run the below command to start the Flask server

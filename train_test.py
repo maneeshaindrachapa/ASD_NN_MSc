@@ -12,7 +12,7 @@ from sklearn.metrics import classification_report, r2_score, mean_absolute_error
 from tensorflow import keras as k
 
 import models
-from caps.capsnet.losses import margin_loss
+from capsnet import margin_loss
 from info import participants, EEG_SHAPE
 import time
 
